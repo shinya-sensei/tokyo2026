@@ -59,12 +59,13 @@
   </div>
 
   <script>
-    // ※ここにGASのウェブアプリURLを貼り付けてください
+    // ※デプロイした最新のGAS URLに書き換えてください
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwp9p75CXf6a-ji9fN4WGvTkHuH0tF9lEQnF2QPKUroDFzGzjlhYRWlMXkcSMANYwZN/exec";
 
     let allData = [];
     let isConfirming = false;
 
+    // 起動時にデータを取得
     window.onload = () => {
       fetch(`${GAS_URL}?action=getData`)
         .then(res => res.json())
@@ -82,17 +83,20 @@
         });
     };
 
+    // 受付人数の表示更新
     function updateCounter(manualCount = null) {
       const total = allData.length;
       const current = manualCount !== null ? manualCount : allData.filter(item => item.checked).length;
       document.getElementById('counterArea').innerText = `受付状況：${current} / ${total}`;
     }
 
+    // カタカナ・平仮名を正規化（検索用）
     function toKatakana(str) {
       if (!str) return "";
       return String(str).replace(/\s+/g, "").replace(/[ぁ-ん]/g, (s) => String.fromCharCode(s.charCodeAt(0) + 0x60));
     }
 
+    // 入力値によるフィルタリング
     function filterCards() {
       if (isConfirming) return;
       const input = document.getElementById('searchInput').value.trim();
@@ -104,10 +108,10 @@
       
       const searchTarget = toKatakana(input).toLowerCase();
       
-      // 名前(B+C) または カナ(K+L) のいずれかに検索文字が含まれるか判定
       const filtered = allData.filter(item => {
         const nameK = toKatakana(item.name).toLowerCase();
         const kanaK = toKatakana(item.kana).toLowerCase();
+        // 名前（B+C）または カナ（K+L）に検索文字が含まれているか
         return nameK.includes(searchTarget) || kanaK.includes(searchTarget);
       });
 
@@ -118,10 +122,10 @@
       renderCards(filtered);
     }
 
+    // 検索結果を表示
     function renderCards(data) {
       const container = document.getElementById('cardContainer');
       container.innerHTML = data.map(item => {
-        // ナチュラ確定数(item.count)の判定
         const countVal = String(item.count || "").trim();
         const isZeroOrEmpty = (countVal === "" || countVal === "0");
         const countHtml = isZeroOrEmpty 
@@ -153,6 +157,7 @@
       `}).join('');
     }
 
+    // 二段階認証（受付ボタンクリック）
     function confirmCheckIn(rowNum, name) {
       const btnArea = document.getElementById(`btn-area-${rowNum}`);
       const btn = btnArea.querySelector('button');
@@ -172,6 +177,7 @@
       }
     }
 
+    // スプレッドシートへの記録実行
     function executeCheckIn(rowNum, btn, name) {
       const target = allData.find(d => d.rowNum === rowNum);
       if(target) target.checked = true;
